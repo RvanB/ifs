@@ -1,77 +1,135 @@
 program ifs
+  use omp_lib
   implicit none
   ! Constants
-  real(8), parameter :: PI=4.D0*DATAN(1.D0)
+  real, parameter :: pi = 3.14159
 
   ! Parameters
-  real, parameter :: zoom=1000
-  integer, parameter :: N = 9
-  integer, parameter :: W=1024, H=1024
+  real, parameter :: zoom=3400
+  integer, parameter :: W=5000, H=5000
   integer, parameter :: ITERATIONS=10**8
 
   ! Variables
-  real, dimension(3, H, W) :: matrix = 0
+  real, dimension(3, H, W) :: image = 0
   real :: theta
   integer :: file_unit, i
-  real, dimension(2, N) :: points
-  real, dimension(3) :: color
+  real :: color(3)
+
+  complex :: point, temp
+  real :: rl
+  real :: imag
+
+  ! Thread private variables
+  ! integer :: thread_id
   real :: r
-  real :: point(2), new_point(2)
+  real :: x, y
 
-  real, dimension(3, N):: colors
-
-  ! Generate and draw initial points
-  do i = 1, N
-     theta = 2 * PI * (i-1) / N
-
-     points(1, i) = cos(theta)
-     points(2, i) = sin(theta)
-
-     call random_number(colors(1, i))
-     call random_number(colors(2, i))
-     call random_number(colors(3, i))
-
-     call draw_point(points(:, i), colors(:, i))
-  end do
-
-  point = points(:, N)
-    
-  ! Iterate
-  do i = 1, ITERATIONS
-     call random_number(r)
-     
-     point = (point + points(:, int(r * N) + 1)) / 2.3
-
-     new_point(1) = point(1) + sin(0.5 * point(2)) * (point(1) * point(2))**4
-     new_point(2) = point(2) + cos(2 * point(1)) * (point(1) * point(2))
-
-     point = new_point
-
-          
-     call draw_point(point, colors(:, int(r * N) + 1))
-  end do
+  call random_number(color)
   
-  call write_image(matrix=matrix, path="image.ppm", gain=1.0)
+  ! Parallelize the main loop with OpenMP
+  !$omp parallel private(point, r) shared(color, image)
+  call random_seed()
+  
 
+  ! Randomize real and imaginary components of point
+  call random_number(rl)
+  call random_number(imag)
+  point = cmplx(rl, imag)
+  
+  point = point * 2 - 1
+
+  !$omp do schedule(dynamic)
+  do i = 1, ITERATIONS
+
+     point = ring(point, 5, 1., 0.5)**2
+
+     ! call random_number(temp)
+     
+     !$omp critical
+     call draw_point(point, color)
+     !$omp end critical
+     
+  end do
+  !$omp end do
+  !$omp end parallel
+
+  print *, "Finished calculations. Writing image..."
+  
+  call write_image(image=image, path="image.ppm", gain=1.0)
 contains
+  
+  function mult_comp(point) result(new_point)
+    complex, intent(in) :: point
+    complex :: new_point
 
-  subroutine draw_point(point, color)
-    real, intent(in) :: point(2)
+    real :: x, y
+
+    x = real(point)
+    y = aimag(point)
+
+    new_point = cmplx(x * y, x * y)
+  end function mult_comp
+    
+  function sin_xy(point) result(new_point)
+    complex, intent(in) :: point
+    complex :: new_point
+    real :: x, y
+
+    x = real(point)
+    y = aimag(point)
+
+    new_point = cmplx(sin(x * y), x * y)
+  end function sin_xy
+  
+  function cos_xy(point) result(new_point)
+    complex, intent(in) :: point
+    complex :: new_point
+    real :: x, y
+
+    x = real(point)
+    y = aimag(point)
+
+    new_point = cmplx(cos(x * y), cos(x * y))
+  end function cos_xy
+
+  function ring(point, n, radius, ratio) result(new_point)
+    complex, intent(in) :: point
+    integer, intent(in) :: n
+    real, intent(in) :: radius
+    real, intent(in) :: ratio
+    
+    complex :: target_point
+    complex :: new_point
+
+    real :: r, theta
+    integer :: i
+
+    call random_number(r)
+    i = int(r * n)
+    theta = 2 * PI / n * i
+
+    target_point = cmplx(cos(theta) * radius, sin(theta) * radius)
+    
+    new_point = (point + target_point) * ratio
+  end function ring
+
+subroutine draw_point(point, color)
+    complex, intent(in) :: point
     real, intent(in) :: color(3)
     real :: x, y
     integer :: i, j
-    
-    i = int(point(2) * zoom) + H/2
-    j = int(point(1) * zoom) + W/2
+
+    i = int(real(point, 8) * zoom + H/2)
+    j = int(aimag(point) * zoom + W/2)
 
     if (i > 0 .and. i < H .and. j > 0 .and. j < W) then
-       matrix(:, i, j) = matrix(:, i, j) + color
+        image(:, i, j) = image(:, i, j) + color
     endif
 
-  end subroutine draw_point
+end subroutine draw_point
     
-  subroutine write_image(matrix, path, gain)
-    real, intent(inout) :: matrix(3, H, W)
+  subroutine write_image(image, path, gain)
+    real, intent(inout) :: image(3, H, W)
     real, intent(in) :: gain
     character(len=*), intent(in) :: path
     integer :: file_unit, x, y
@@ -80,18 +138,20 @@ contains
     open(NEWUNIT=file_unit, file=path, status='replace', form='formatted')
 
     write(file_unit, '(A)') 'P3'
-    write(file_unit, '(I4)') H
     write(file_unit, '(I4)') W
+    write(file_unit, '(I4)') H
     write(file_unit, '(A)') '255' ! Max value
 
-    matrix = (matrix - minval(matrix)) / (maxval(matrix) - minval(matrix)) * gain
+    image = image ** (1/2.2) ! Gamma correction
+    
+    image = (image - minval(image)) / (maxval(image) - minval(image)) * gain
     
     do y = 1, H
        do x = 1, W
           
-          r = min(255.0, matrix(1, y, x) * 255.0)
-          g = min(255.0, matrix(2, y, x) * 255.0)
-          b = min(255.0, matrix(3, y, x) * 255.0)
+          r = min(255.0, image(1, y, x) * 255.0)
+          g = min(255.0, image(2, y, x) * 255.0)
+          b = min(255.0, image(3, y, x) * 255.0)
           
           write(file_unit, '(I3, 1X, I3, 1X, I3, 1X)', advance='no') int(r), int(g), int(b)
        end do
