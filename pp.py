@@ -24,7 +24,8 @@ image = cv2.imread(args.image)
 image = cv2.GaussianBlur(image, (args.blur, args.blur), 0)
 
 # Create a blank image with the same shape
-contour_image = np.ones_like(image) * 255
+contour_image = np.zeros_like(image)
+bloom_image = np.zeros_like(image)
 
 for i in range(args.first_step, 255 - args.last_step, args.step):
     # Convert image to grayscale
@@ -37,6 +38,17 @@ for i in range(args.first_step, 255 - args.last_step, args.step):
     contours, _ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
     # Draw contour lines
-    cv2.drawContours(contour_image, contours, -1, (0, 0, 0), 2)
+    cv2.drawContours(contour_image, contours, -1, (255, 255, 255), 1)
+    cv2.drawContours(bloom_image, contours, -1, (20, 180, 70), 5)
+
+# Add some bloom-like effect
+bloom_image = cv2.GaussianBlur(bloom_image, (11, 11), 0)
+
+# Overlay bloom_image white pixels on bloom_image
+contour_image = cv2.GaussianBlur(contour_image, (3, 3), 0)
+contour_image = cv2.addWeighted(contour_image, 1.5, bloom_image, 1, 0)
+
+# Clip to 0-255
+contour_image = np.clip(contour_image, 0, 255)
 
 cv2.imwrite(f"{image_name}-pp.jpg", contour_image)
