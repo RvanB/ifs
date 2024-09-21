@@ -6,8 +6,8 @@ program ifs
 
   ! Parameters
   real, parameter :: zoom=3400
-  integer, parameter :: W=5000, H=5000
-  integer, parameter :: ITERATIONS=10**8
+  integer, parameter :: W=3440, H=1440
+  integer(4), parameter :: ITERATIONS=10**8
 
   ! Variables
   real, dimension(3, H, W) :: image = 0
@@ -24,7 +24,7 @@ program ifs
   real :: r
   real :: x, y
 
-  call random_number(color)
+  color = [0.8, 1.0, 0.6]
   
   ! Parallelize the main loop with OpenMP
   !$omp parallel private(point, r) shared(color, image)
@@ -41,7 +41,9 @@ program ifs
   !$omp do schedule(dynamic)
   do i = 1, ITERATIONS
 
-     point = ring(point, 5, 1., 0.5)**2
+     point = ring(point, 4, 1., 0.5)
+
+     point = tan(point)
 
      ! call random_number(temp)
      
@@ -55,7 +57,7 @@ program ifs
 
   print *, "Finished calculations. Writing image..."
   
-  call write_image(image=image, path="image.ppm", gain=1.0)
+  call write_image(image=image, path="image.ppm", gain=3.0)
 contains
   
   function mult_comp(point) result(new_point)
