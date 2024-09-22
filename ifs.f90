@@ -83,40 +83,6 @@ program ifs
 
 contains
 
-  function mult_comp(point) result(new_point)
-    complex, intent(in) :: point
-    complex :: new_point
-
-    real :: x, y
-
-    x = real(point)
-    y = aimag(point)
-
-    new_point = cmplx(x * y, x * y)
-  end function mult_comp
-
-  function sin_xy(point) result(new_point)
-    complex, intent(in) :: point
-    complex :: new_point
-    real :: x, y
-
-    x = real(point)
-    y = aimag(point)
-
-    new_point = cmplx(sin(x * y), x * y)
-  end function sin_xy
-
-  function cos_xy(point) result(new_point)
-    complex, intent(in) :: point
-    complex :: new_point
-    real :: x, y
-
-    x = real(point)
-    y = aimag(point)
-
-    new_point = cmplx(cos(x * y), cos(x * y))
-  end function cos_xy
-
   function ring(point, n, radius, ratio) result(new_point)
     complex, intent(in) :: point
     integer, intent(in) :: n
