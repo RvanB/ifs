@@ -1,19 +1,19 @@
 # Compiler
 FC = gfortran
-CXX = clang++  # C++ compiler
+CXX = clang++
 
 # Compiler flags
 FCFLAGS = -fopenmp -Wall -Wextra
-CXXFLAGS = -std=c++11 `pkg-config --cflags opencv4`  # OpenCV flags for C++
-CXXLIBS = `pkg-config --libs opencv4`  # OpenCV libraries
+CXXFLAGS = -std=c++11 `pkg-config --cflags opencv4`
+CXXLIBS = `pkg-config --libs opencv4`
 
 # Source files
 SRCS = ifs.f08 functions.f08 rendering.f08
-CXXSRCS = pp.cpp  # C++ source file for OpenCV processing
+CXXSRCS = pp.cpp
 
 # Object files for all source files
 OBJS = $(SRCS:.f08=.o)
-CXXOBJS = $(CXXSRCS:.cpp=.o)  # Object files for C++ source files
+CXXOBJS = $(CXXSRCS:.cpp=.o)
 
 # Object files specifically for module source files
 MODULE_SRCS = functions.f08 rendering.f08

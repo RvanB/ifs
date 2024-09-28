@@ -31,4 +31,11 @@ contains
     unit_rand = cmplx(r(1), r(2)) * 2 - 1
   end function unit_rand
 
+  complex function normalize(point)
+    complex, intent(in) :: point
+    real :: magnitude
+    magnitude = sqrt(real(point)**2 + aimag(point)**2)
+    normalize = point / magnitude
+  end function normalize
+
 end module functions

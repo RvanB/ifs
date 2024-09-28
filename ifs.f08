@@ -6,9 +6,9 @@ program ifs
 
   ! ---------- SETTINGS ----------
   integer, parameter :: ITERATIONS=10**8
-  integer, parameter :: WIDTH = 4000
-  integer, parameter :: HEIGHT = 4000
-  real, parameter :: GAIN = 30
+  integer, parameter :: WIDTH = 3440*2
+  integer, parameter :: HEIGHT = 1440*2
+  real, parameter :: GAIN = 6
   real, parameter :: ZOOM = 1500
   character(len=*), parameter :: FILENAME = "test.jpg"
 
@@ -20,8 +20,8 @@ program ifs
 
   ! ---------- DEFINE FUNCTIONS ----------
   complex :: f, g
-  f(point) = tan(ring(point, n=4, radius=1.5, ratio=0.5))
-  g(point) = point * point
+  f(point) = tan(ring(point, n=6, radius=1.5, ratio=0.5) * cmplx(0, 1))
+  g(point) = point * normalize(cmplx(2, 1))
 
   ! ---------- MAIN SECTION ----------
   ! Create WxH image
@@ -44,11 +44,11 @@ program ifs
      call random_number(r)
      if (r < 0.5) then
         point = g(f(point))
-        color = [1.0, 0.1, 8.0]
+        color = [0.5, 0.4, .1]
      else
         point = f(g(point))
         call random_number(color)
-        color = [0.1, 0.1, 0.5]
+        color = [0.1, 0.2, 0.4]
      end if
      ! point = f(point)
 
