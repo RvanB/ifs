@@ -38,4 +38,18 @@ contains
     normalize = point / magnitude
   end function normalize
 
+  complex function rotate(point, theta, about)
+    complex, intent(in) :: point, about
+    real, intent(in) :: theta
+    ! rotate = point * cmplx(cos(theta), sin(theta))
+    rotate = (point - about) * cmplx(cos(theta), sin(theta)) + about
+  end function rotate
+
+  complex function translate(point, dx, dy)
+    complex, intent(in) :: point
+    real, intent(in) :: dx
+    real, intent(in) :: dy
+    translate = point + cmplx(dx, dy)
+  end function translate
+
 end module functions
