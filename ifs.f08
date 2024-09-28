@@ -4,29 +4,27 @@ program ifs
   use rendering
   implicit none
 
-  ! ---------- VARIABLES & CONSTANTS ----------
+  ! ---------- SETTINGS ----------
+  integer, parameter :: ITERATIONS=10**8
+  integer, parameter :: WIDTH = 4000
+  integer, parameter :: HEIGHT = 4000
+  real, parameter :: GAIN = 30
+  real, parameter :: ZOOM = 1500
 
-  ! Parameters
-  integer(4), parameter :: ITERATIONS=10**8
-
-  ! Variables
+  ! ---------- VARIABLES ----------
   real :: color(3)
-
-  ! Thread private variables
   complex :: point
   real :: r
   real, allocatable :: local_image(:,:,:)
 
+  ! ---------- DEFINE FUNCTIONS ----------
+  complex :: f, g
+  f(point) = tan(ring(point, n=4, radius=1.5, ratio=0.5))
+  g(point) = point * point
+
   ! ---------- MAIN SECTION ----------
-
-  ! Define functions
-  complex :: f, g, h
-  f(point) = tan(ring(point, n=5, radius=1.0, ratio=0.5))
-  g(point) = ring(point, n=6, radius=1.0, ratio=0.5)
-  h(point) = point
-
-  ! Allocate image
-  ! call allocate_image()
+  ! Create WxH image
+  call initialize_image(HEIGHT, WIDTH)
 
   ! Parallelize the main loop with OpenMP
   !$omp parallel private(point, r, local_image) shared(color, image)
@@ -41,31 +39,30 @@ program ifs
   
   !$omp do schedule(static)
   do i = 1, ITERATIONS
-
-     ! point = h(g(f(point)))
+     
      call random_number(r)
-     if (r < 0.6) then
-        point = f(point)
-        color = (/0., 0.1, 1./)
-     else 
-        point = g(point)
-        color = (/0.2, .5, 0.7/)
+     if (r < 0.5) then
+        point = g(f(point))
+        color = [1.0, 0.1, 8.0]
+     else
+        point = f(g(point))
+        call random_number(color)
+        color = [0.1, 0.1, 0.5]
      end if
+     ! point = f(point)
 
      ! point = ring(point, 5, 1., 0.5)
           
-     call draw_point(point, color, local_image)
+     call draw_point(point * zoom + cmplx(WIDTH / 2, HEIGHT / 2), color, local_image)
   end do
   !$omp end do
 
   !$omp critical
   call stack_image(local_image)
-  ! deallocate(local_image)
   !$omp end critical
-
+  
   !$omp end parallel
 
-  call write_image(gain=2.5)
-  ! call deallocate_image()
+  call write_image(gain=GAIN)
 
 end program ifs
