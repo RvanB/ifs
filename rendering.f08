@@ -1,3 +1,18 @@
+! Fortran module to define the interface
+module c_interface
+    use, intrinsic :: iso_c_binding
+    implicit none
+
+    interface
+        subroutine post_process(img, height, width, filename) bind(c, name="post_process")
+          use iso_c_binding
+          character(kind=c_char), intent(in) :: filename(*)
+          integer(c_int), intent(in) :: height, width
+          type(c_ptr), value, intent(in) :: img     
+        end subroutine post_process
+    end interface
+end module c_interface
+
 module rendering
   use, intrinsic :: iso_c_binding
   implicit none
@@ -28,20 +43,19 @@ contains
     height = size(image, 2)
     width = size(image, 3)
 
-    ! i = int(real(point, 8) * zoom + height/2)
-    ! j = int(aimag(point) * zoom + width/2)
-
     x = int(real(point))
     y = int(aimag(point))
 
-    if (y > 0 .and. y < height .and. x > 0 .and. x < width) then
+    if (y > 0 .and. y <= height .and. x > 0 .and. x <= width) then
        image(:, y, x) = image(:, y, x) + color
     endif
 
   end subroutine draw_point
 
-  subroutine write_image(gain)
+  subroutine write_image(filename, gain)
     use c_interface
+
+    character(len=*, kind=c_char), intent(in) :: filename
     real, intent(in) :: gain
 
     integer :: height, width
@@ -51,24 +65,10 @@ contains
 
     image = image ** (1/2.2) ! Gamma correction
     image = (image - minval(image)) / (maxval(image) - minval(image)) * gain
-
     
     ! Call C function
-    call c_function(c_loc(image), height, width)
+    call post_process(c_loc(image), height, width, filename)
   end subroutine write_image
   
 end module rendering
 
-! Fortran module to define the interface
-module c_interface
-    use, intrinsic :: iso_c_binding
-    implicit none
-
-    interface
-        subroutine c_function(img, height, width) bind(c, name="c_function")
-          use iso_c_binding
-          integer(c_int) :: height, width
-          type(c_ptr), value :: img     
-        end subroutine c_function
-    end interface
-end module c_interface

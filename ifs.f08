@@ -10,6 +10,7 @@ program ifs
   integer, parameter :: HEIGHT = 4000
   real, parameter :: GAIN = 30
   real, parameter :: ZOOM = 1500
+  character(len=*), parameter :: FILENAME = "test.jpg"
 
   ! ---------- VARIABLES ----------
   real :: color(3)
@@ -63,6 +64,6 @@ program ifs
   
   !$omp end parallel
 
-  call write_image(gain=GAIN)
+  call write_image(gain=GAIN, filename=FILENAME)
 
 end program ifs
