@@ -31,11 +31,14 @@ contains
     unit_rand = cmplx(r(1), r(2)) * 2 - 1
   end function unit_rand
 
+  real function magnitude(point)
+    complex, intent(in) :: point
+    magnitude = sqrt(real(point)**2 + aimag(point)**2)
+  end function magnitude
+
   complex function normalize(point)
     complex, intent(in) :: point
-    real :: magnitude
-    magnitude = sqrt(real(point)**2 + aimag(point)**2)
-    normalize = point / magnitude
+    normalize = point / magnitude(point)
   end function normalize
 
   complex function rotate(point, theta, about)
@@ -51,5 +54,17 @@ contains
     real, intent(in) :: dy
     translate = point + cmplx(dx, dy)
   end function translate
+
+  complex function scale(point, xscale, yscale, about)
+    complex, intent(in) :: point, about
+    real, intent(in) :: xscale
+    real, intent(in) :: yscale
+    scale = (point - about) * cmplx(xscale, yscale) + about
+  end function scale
+
+  real function angle(point)
+    complex, intent(in) :: point
+    angle = atan2(aimag(point), real(point))
+  end function angle
 
 end module functions

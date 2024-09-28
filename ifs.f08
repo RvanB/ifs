@@ -6,11 +6,11 @@ program ifs
 
   ! ---------- SETTINGS ----------
   integer, parameter :: ITERATIONS=10**8
-  integer, parameter :: WIDTH = 3440*2
-  integer, parameter :: HEIGHT = 1440*2
-  real, parameter :: GAIN = 6
-  real, parameter :: ZOOM = 1500
-  character(len=*), parameter :: FILENAME = "test.jpg"
+  integer, parameter :: WIDTH = 2000
+  integer, parameter :: HEIGHT = 2000
+  real, parameter :: GAIN = 2
+  real, parameter :: ZOOM = 4000
+  character(len=*), parameter :: FILENAME = "output.png"
 
   ! ---------- VARIABLES ----------
   real :: color(3)
@@ -18,10 +18,12 @@ program ifs
   real :: r
   real, allocatable :: local_image(:,:,:)
 
+  complex :: ORIGIN = 0
+
   ! ---------- DEFINE FUNCTIONS ----------
-  complex :: f, g
-  f(point) = tan(ring(point, n=6, radius=1.5, ratio=0.5) * cmplx(0, 1))
-  g(point) = point * normalize(cmplx(2, 1))
+  complex :: f, g, h
+  ! g(point) = ring(point, n=4, radius=.8, ratio=0.5)
+  f(point) = rotate(ring(point, n=2, radius=0.2 + abs(0.5 * sin(4 * angle(point))), ratio=0.3), theta=magnitude(point), about=point*0.3)
 
   ! ---------- MAIN SECTION ----------
   ! Create WxH image
@@ -40,19 +42,22 @@ program ifs
   
   !$omp do schedule(static)
   do i = 1, ITERATIONS
+
+     color = [0.1, 0.35, 0.5]
      
      call random_number(r)
-     if (r < 0.5) then
-        point = g(f(point))
-        color = [0.5, 0.4, .1]
-     else
-        point = f(g(point))
-        call random_number(color)
-        color = [0.1, 0.2, 0.4]
-     end if
-     ! point = f(point)
+     ! if (r < 0.33) then
+     !    point = g(point)
+     !    color = [0.5, 0., .1]
+     ! if (r < 0.66) then
+     !    point = f(point)
+     !    color = [1., 0.1, 0.]
+     ! else
+     !    point = h(point)
+     !    color = [0., 0.1, 1.]
+     ! end if
 
-     ! point = ring(point, 5, 1., 0.5)
+     point = f(point)
           
      call draw_point(point * zoom + cmplx(WIDTH / 2, HEIGHT / 2), color, local_image)
   end do
