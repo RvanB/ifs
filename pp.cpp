@@ -26,13 +26,6 @@ extern "C" void post_process(float *img, int* height_ptr, int* width_ptr, const 
   // Write the image
   cv::imwrite(filename, image);
 
-  // Open image viewer
-  cv::imshow("image", image);
-  cv::waitKey(0);
-  
-
-  
-
   // // Downscale, averaging neighboring pixels
   // cv::Mat downscale;
   // cv::resize(image, downscale, cv::Size(), 0.5, 0.5, cv::INTER_AREA);

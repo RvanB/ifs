@@ -76,7 +76,7 @@ contains
     ! Normalize alpha channel
     image(4, :, :) = image(4, :, :) / maxval(image(4, :, :))
 
-     ! Gamma correction
+    ! Gamma correction
     image(1:3, :, :) = image(1:3, :, :) ** (1.0 / gamma)
 
     if (invert) then
@@ -84,15 +84,15 @@ contains
        image(1:3, :, :) = 1.0 - image(1:3, :, :)
     end if
 
+    ! Apply alpha gain
+    image(4, :, :) = image(4, :, :) * gain
+
     do c = 1, 3
        image(c, :, :) = image(c, :, :) * image(4, :, :) + bg_color(c) * (1.0 - image(4, :, :))
     end do
 
     ! Set alpha to 1
     image(4, :, :) = 1.0
-
-    ! Apply gain
-    image(1:3, :, :) = image(1:3, :, :) * gain
 
     print *, "Writing image to ", filename
     ! Call C function to write the image
