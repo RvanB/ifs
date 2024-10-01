@@ -7,18 +7,21 @@ extern "C" void post_process(float *img, int* height_ptr, int* width_ptr, const 
 
   printf("Saving image of size %dx%d to %s\n", width, height, filename);
   
-  cv::Mat image(height, width, CV_32FC3);
+  cv::Mat image(height, width, CV_32FC4);
 
   for (int h = 0; h < height; h++) {
     for (int w = 0; w < width; w++) {
-	for (int c = 0; c < 3; c++) {
-	  image.at<cv::Vec3f>(h, w)[c] = img[(2-c) + h * 3 + w * 3 * height] * 255;
-	}
+      // Access each channel correctly
+      float* pixel = image.ptr<float>(h, w); // Get pointer to the pixel (h, w)
+      pixel[0] = img[2 + h * width * 4 + w * 4] * 255;     // Blue
+      pixel[1] = img[1 + h * width * 4 + w * 4] * 255;     // Green
+      pixel[2] = img[0 + h * width * 4 + w * 4] * 255;     // Red
+      pixel[3] = img[3 + h * width * 4 + w * 4] * 255;     // Alpha
     }
   }
 
   // Convert image to integer
-  image.convertTo(image, CV_8UC3);  
+  image.convertTo(image, CV_8UC4);  
 
   // Write the image
   cv::imwrite(filename, image);

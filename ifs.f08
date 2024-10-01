@@ -8,8 +8,11 @@ program ifs
   integer, parameter :: ITERATIONS=10**8
   integer, parameter :: WIDTH = 2000
   integer, parameter :: HEIGHT = 2000
-  real, parameter :: GAIN = 2
-  real, parameter :: ZOOM = 4000
+  logical, parameter :: SUBTRACTIVE = .true.
+  real, parameter :: BACKGROUND = [0., 0., 0.]
+  real, parameter :: GAIN = 10
+  real, parameter :: GAMMA = 10
+  real, parameter :: ZOOM = 1500
   character(len=*), parameter :: FILENAME = "output.png"
 
   ! ---------- VARIABLES ----------
@@ -21,9 +24,8 @@ program ifs
   complex :: ORIGIN = 0
 
   ! ---------- DEFINE FUNCTIONS ----------
-  complex :: f, g, h
-  ! g(point) = ring(point, n=4, radius=.8, ratio=0.5)
-  f(point) = rotate(ring(point, n=2, radius=0.2 + abs(0.5 * sin(4 * angle(point))), ratio=0.3), theta=magnitude(point), about=point*0.3)
+  complex :: f
+  f(point) = tan(ring(point, n=3, radius=.8, ratio=0.5))
 
   ! ---------- MAIN SECTION ----------
   ! Create WxH image
@@ -33,7 +35,7 @@ program ifs
   !$omp parallel private(point, r, local_image) shared(color, image)
 
   ! Allocate image on heap (rather than stack)
-  allocate(local_image(3, HEIGHT, WIDTH))
+  allocate(local_image(4, HEIGHT, WIDTH))
   local_image = 0.0
 
   ! Create a random point in unit circle
@@ -43,21 +45,20 @@ program ifs
   !$omp do schedule(static)
   do i = 1, ITERATIONS
 
-     color = [0.1, 0.35, 0.5]
-     
      call random_number(r)
-     ! if (r < 0.33) then
-     !    point = g(point)
-     !    color = [0.5, 0., .1]
-     ! if (r < 0.66) then
-     !    point = f(point)
-     !    color = [1., 0.1, 0.]
-     ! else
-     !    point = h(point)
-     !    color = [0., 0.1, 1.]
-     ! end if
 
-     point = f(point)
+     if (r < 0.5) then
+        point = f(point)
+        color = [1., 0., 1.]
+     else
+        point = rotate(point, theta=pi, about=ORIGIN)
+        point = f(point)
+        color = [1., 1., 0.]
+     end if
+
+     if (SUBTRACTIVE) then
+        color = 1 - color
+     end if
           
      call draw_point(point * zoom + cmplx(WIDTH / 2, HEIGHT / 2), color, local_image)
   end do
@@ -69,6 +70,6 @@ program ifs
   
   !$omp end parallel
 
-  call write_image(gain=GAIN, filename=FILENAME)
+  call write_image(filename=FILENAME, gain=GAIN, gamma=GAMMA, invert=SUBTRACTIVE, bg_color=BACKGROUND)
 
 end program ifs
