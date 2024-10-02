@@ -11,12 +11,12 @@ extern "C" void post_process(float *img, int* height_ptr, int* width_ptr, const 
 
   for (int h = 0; h < height; h++) {
     for (int w = 0; w < width; w++) {
-      // Access each channel correctly
-      float* pixel = image.ptr<float>(h, w); // Get pointer to the pixel (h, w)
-      pixel[0] = img[2 + h * width * 4 + w * 4] * 255;     // Blue
-      pixel[1] = img[1 + h * width * 4 + w * 4] * 255;     // Green
-      pixel[2] = img[0 + h * width * 4 + w * 4] * 255;     // Red
-      pixel[3] = img[3 + h * width * 4 + w * 4] * 255;     // Alpha
+      float* pixel = image.ptr<float>(h, w);
+
+      pixel[0] = img[2 + h * 4 + w * 4 * height] * 255;
+      pixel[1] = img[1 + h * 4 + w * 4 * height] * 255;
+      pixel[2] = img[0 + h * 4 + w * 4 * height] * 255;
+      pixel[3] = img[3 + h * 4 + w * 4 * height] * 255;
     }
   }
 
