@@ -5,14 +5,14 @@ program ifs
   implicit none
 
   ! ---------- SETTINGS ----------
-  integer, parameter :: ITERATIONS=10**8
-  integer, parameter :: WIDTH = 2000
-  integer, parameter :: HEIGHT = 2000
+  integer, parameter :: ITERATIONS=10**5
+  integer, parameter :: WIDTH = 512
+  integer, parameter :: HEIGHT = 512
   logical, parameter :: SUBTRACTIVE = .true.
   real, parameter :: BACKGROUND(3) = [0,0,0]
   real, parameter :: GAIN = 10
-  real, parameter :: GAMMA = 9
-  real, parameter :: ZOOM = 1500
+  real, parameter :: GAMMA = 8
+  real, parameter :: ZOOM = 256
   character(len=*), parameter :: FILENAME = "output.png"
 
   ! ---------- VARIABLES ----------
@@ -24,9 +24,9 @@ program ifs
   complex :: ORIGIN = 0
 
   ! ---------- DEFINE FUNCTIONS ----------
-  complex :: f
-  f(point) = rotate(tan(ring(point, n=4, radius=.8, ratio=0.55)), theta=0.1 * angle(point), about=ORIGIN)
-  ! f(point) = tan(ring(point, n=7, radius=1., ratio=0.5))
+  complex :: f, g
+  f(point) = tan(ring(point, n=5, radius=1., ratio=0.7))
+  ! g(point) = ring(point, n=5, radius=1., ratio=0.5)
   ! ---------- MAIN SECTION ----------
   ! Create WxH image
   call initialize_image(HEIGHT, WIDTH)
@@ -49,11 +49,10 @@ program ifs
 
      if (r < 0.5) then
         point = f(point)
-        color = [1., 0., 1.]
+        color = [0., 0., 1.]
      else
-        point = rotate(point, theta=pi/2, about=ORIGIN)
         point = f(point)
-        color = [1., 1., 0.]
+        color = [1., 0.5, 0.]
      end if
 
      if (SUBTRACTIVE) then

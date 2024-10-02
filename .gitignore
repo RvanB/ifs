@@ -1,0 +1,7 @@
+*.o
+*.mod
+*.png
+*.jpg
+*.ppm
+ifs
+.DS_Store
