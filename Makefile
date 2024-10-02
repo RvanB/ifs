@@ -42,7 +42,7 @@ ifs.o: $(MODULE_OBJS)
 
 # Rule to clean up object files, module files, and the executable
 clean:
-	rm -f $(OBJS) $(MODULE_OBJS) $(CXXOBJS) $(TARGET)
+	rm -f $(OBJS) $(CXXOBJS) $(TARGET) *.mod
 
 # Phony targets
 .PHONY: all clean
